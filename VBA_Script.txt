@@ -1,0 +1,93 @@
+Sub stockAnalysis()
+'For loop to run everything over every worksheet
+Dim Current As Worksheet
+For Each Current In Worksheets
+'Definition of variables and their starting values
+    Dim percChange As Double
+    Dim tickerCol As Integer
+    Dim firstRow, lastRow, currentTickerRow As Long
+    tickerCol = 1
+    firstRow = 2
+    lastRow = Current.Cells(Rows.Count, 1).End(xlUp).Row
+    currentTickerRow = 2
+'Print the New Table Headers
+Current.Range("I1").Value = "Ticker"
+Current.Range("J1").Value = "Yearly Change ($)"
+Current.Range("K1").Value = "Percent Change"
+Current.Range("L1").Value = "Total Stock Volume"
+'For the whole data set:
+    For i = firstRow To lastRow
+'start Calculating the total Volume
+        arrayTotal = arrayTotal + Current.Cells(i, 7).Value
+'if the next ticker entry along is new
+        If Current.Cells(i + 1, tickerCol).Value <> Current.Cells(i, tickerCol).Value Then
+            
+'Figure out each ticker, and the row boundries they fall in (assume the tickers are grouped together)
+            Current.Cells(currentTickerRow, 9).Value = Current.Cells(i, tickerCol).Value
+
+            
+'Find the first open, and last closing for the ticker
+            opening = Current.Cells(firstRow, 3).Value
+            closing = Current.Cells(i, 6).Value
+            totalChange = closing - opening
+            If opening = 0 And cloing = 0 Then
+            percChange = 0
+            Else
+                percChange = ((closing - opening) / opening)
+            End If
+            
+'Print everything where it needs to go
+            Current.Cells(currentTickerRow, 10).Value = totalChange
+            Current.Cells(currentTickerRow, 12).Value = arrayTotal
+            Current.Cells(currentTickerRow, 11).Value = percChange
+            
+'And Format that data as it needs to be
+            Current.Cells(currentTickerRow, 11).NumberFormat = "0.00%"
+            If Current.Cells(currentTickerRow, 10).Value > 0 Then
+                Current.Cells(currentTickerRow, 11).Interior.ColorIndex = 4
+            Else
+                Current.Cells(currentTickerRow, 11).Interior.ColorIndex = 3
+            End If
+            
+            
+            
+'Increment the variables that need to be preserved
+            currentTickerRow = currentTickerRow + 1
+            firstRow = i + 1
+            arrayTotal = 0
+        End If
+
+    Next i
+' Figure out which tickers have the biggestincrease, decrease, and most volume
+    numTickers = Current.Cells(Rows.Count, 9).End(xlUp).Row
+    percIncrease = 0
+    percDecrease = 0
+    largestVol = 0
+    For i = 2 To numTickers
+        If Current.Cells(i, 11).Value > percIncrease Then
+            percIncrease = Current.Cells(i, 11).Value
+            percIncreaseTicker = Current.Cells(i, 9).Value
+        ElseIf Current.Cells(i, 11).Value < percDecrease Then
+            percDecrease = Current.Cells(i, 11).Value
+            percDecreaseTicker = Current.Cells(i, 9).Value
+        End If
+        If Current.Cells(i, 12).Value > largestVol Then
+            largestVol = Current.Cells(i, 12).Value
+            largestVolTicker = Current.Cells(i, 9).Value
+        End If
+        Next i
+'Print the results and the table around it
+    Current.Range("O4").Value = "Ticker"
+    Current.Range("P4").Value = "Value"
+    Current.Range("N5").Value = "Greatest % Increase"
+    Current.Range("N6").Value = "Greatest % Decrease"
+    Current.Range("N7").Value = "Greatest Total Volume"
+    Current.Cells(5, 15).Value = percIncreaseTicker
+    Current.Cells(5, 16).Value = percIncrease
+    Current.Cells(6, 15).Value = percDecreaseTicker
+    Current.Cells(6, 16).Value = percDecrease
+    Current.Cells(7, 15).Value = largestVolTicker
+    Current.Cells(7, 16).Value = largestVol
+    Current.Range("P5, P6").NumberFormat = "0.00%"
+    Next
+End Sub
